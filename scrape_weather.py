@@ -61,7 +61,6 @@ class GCWeatherParser(HTMLParser):
                 pass
 
 if __name__ == '__main__':
-
     parser = GCWeatherParser()
     workingDay = date.today()
 
@@ -69,7 +68,11 @@ if __name__ == '__main__':
         year = workingDay.year
         month = workingDay.month
 
+        #URL where month and year roll back as the loop continues
         url = f"http://climate.weather.gc.ca/climate_data/daily_data_e.html?StationID=27174&timeframe=2&StartYear=1840&EndYear=2018&Day=1&Year={year}&Month={month}#"
+
+        #reset weather data for the new month
+        parser.weatherData = {}
 
         with urllib.request.urlopen(url) as response:
             html = response.read().decode('utf-8')
@@ -77,10 +80,15 @@ if __name__ == '__main__':
         parser.date = workingDay
         parser.feed(html)
 
-        workingDay -= timedelta(days=workingDay.day)
+        #Print weather data for the month if available
+        if parser.weatherData:
+            for day, data in parser.weatherData.items():
+                print(f"weather({day.strftime('%m-%d-%Y')}): {data}")
 
-        print (parser.weatherData)
-
-        #For debugging to break infinite loop
-        if month == 9:
+        else:
+            #Break the loop if there is no data found for the month
+            print(f"No data available for {workingDay.strftime('%B %Y')}. Ending loop.")
             break
+
+        #move to the previous month
+        workingDay = workingDay.replace(day=1) - timedelta(days=1)
