@@ -1,5 +1,6 @@
 from html.parser import HTMLParser
 import urllib.request
+from datetime import date
 
 class GCWeatherParser(HTMLParser):
     def __init__(self):
@@ -58,13 +59,20 @@ class GCWeatherParser(HTMLParser):
                 # print(f"other data from row: {data}")
                 pass
 
-parser = GCWeatherParser()
+if __name__ == '__main__':
 
-url = "http://climate.weather.gc.ca/climate_data/daily_data_e.html?StationID=27174&timeframe=2&StartYear=1840&EndYear=2018&Day=1&Year=2018&Month=5#"
+    parser = GCWeatherParser()
+    today = date.today()
+    year = today.year
+    month = today.month
 
-with urllib.request.urlopen(url) as response:
-    html = response.read().decode('utf-8')
+    
 
-parser.feed(html)
+    url = f"http://climate.weather.gc.ca/climate_data/daily_data_e.html?StationID=27174&timeframe=2&StartYear=1840&EndYear=2018&Day=1&Year={year}&Month={month}#"
 
-print (parser.weatherData)
+    with urllib.request.urlopen(url) as response:
+        html = response.read().decode('utf-8')
+
+    parser.feed(html)
+
+    print (parser.weatherData)
