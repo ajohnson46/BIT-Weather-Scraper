@@ -1,6 +1,6 @@
 from html.parser import HTMLParser
 import urllib.request
-from datetime import date
+from datetime import date, timedelta
 
 class GCWeatherParser(HTMLParser):
     def __init__(self):
@@ -9,7 +9,8 @@ class GCWeatherParser(HTMLParser):
         self.in_row = False
         self.in_th = False
         self.column_counter = 0
-        self.date = 0
+        self.date = date.today()
+        self.finished = False
 
     def handle_starttag(self, tag, attrs):
         # th[scope=row] has the day. After, the data will be weather info. Non-numeric can be ignored.
@@ -45,7 +46,7 @@ class GCWeatherParser(HTMLParser):
         # "...if we are in..." = There's a condition that is set up. We're looking for a boolean concept.
         if self.in_row:
             if self.in_th: # This is specifically the beginning of the row.
-                self.date = int(data)
+                self.date=self.date.replace(day = int(data))
                 # Creating the dictionary keys
                 self.weatherData[self.date] = {"max": None, "min": None, "mean": None} 
             elif self.column_counter == 1:
@@ -62,17 +63,24 @@ class GCWeatherParser(HTMLParser):
 if __name__ == '__main__':
 
     parser = GCWeatherParser()
-    today = date.today()
-    year = today.year
-    month = today.month
+    workingDay = date.today()
 
-    
+    while parser.finished == False:
+        year = workingDay.year
+        month = workingDay.month
 
-    url = f"http://climate.weather.gc.ca/climate_data/daily_data_e.html?StationID=27174&timeframe=2&StartYear=1840&EndYear=2018&Day=1&Year={year}&Month={month}#"
+        url = f"http://climate.weather.gc.ca/climate_data/daily_data_e.html?StationID=27174&timeframe=2&StartYear=1840&EndYear=2018&Day=1&Year={year}&Month={month}#"
 
-    with urllib.request.urlopen(url) as response:
-        html = response.read().decode('utf-8')
+        with urllib.request.urlopen(url) as response:
+            html = response.read().decode('utf-8')
 
-    parser.feed(html)
+        parser.date = workingDay
+        parser.feed(html)
 
-    print (parser.weatherData)
+        workingDay -= timedelta(days=workingDay.day)
+
+        print (parser.weatherData)
+
+        #For debugging to break infinite loop
+        if month == 9:
+            break
