@@ -3,14 +3,23 @@ import urllib.request
 from datetime import date, timedelta
 
 class GCWeatherParser(HTMLParser):
+    """Stuff
+
+    """
     def __init__(self):
+        """Info about how it's made
+        """
         super().__init__()
         self.weatherData = {}
+        """A dictionary of dictionaries. Date ->  Min:int, Max:int, Mean:int """
+        self.date = date.today() # Could be passed in somehow, like when parsing.
+        self.finished = False
+        """ """
+
+        # Could be private:
         self.in_row = False
         self.in_th = False
         self.column_counter = 0
-        self.date = date.today()
-        self.finished = False
 
     def handle_starttag(self, tag, attrs):
         # th[scope=row] has the day. After, the data will be weather info. Non-numeric can be ignored.
@@ -45,16 +54,18 @@ class GCWeatherParser(HTMLParser):
         # "...we need to know..." = There should be a variable that was set up previously
         # "...if we are in..." = There's a condition that is set up. We're looking for a boolean concept.
         if self.in_row:
+            daystring = self.date.isoformat()
             if self.in_th: # This is specifically the beginning of the row.
                 self.date=self.date.replace(day = int(data))
+                daystring = self.date.isoformat()
                 # Creating the dictionary keys
-                self.weatherData[self.date] = {"max": None, "min": None, "mean": None} 
+                self.weatherData[daystring] = {"max": None, "min": None, "mean": None} 
             elif self.column_counter == 1:
-                self.weatherData[self.date]["max"] = data
+                self.weatherData[daystring]["max"] = data
             elif self.column_counter == 2:
-                self.weatherData[self.date]["min"] = data
+                self.weatherData[daystring]["min"] = data
             elif self.column_counter == 3:
-                self.weatherData[self.date]["mean"] = data
+                self.weatherData[daystring]["mean"] = data
             else: # other parts of the row....
                 # We need to knw if we're in a td? The first, second, or third tds?
                 # print(f"other data from row: {data}")
@@ -63,6 +74,7 @@ class GCWeatherParser(HTMLParser):
 if __name__ == '__main__':
     parser = GCWeatherParser()
     workingDay = date.today()
+    # workingDay = date.fromisoformat('1997-03-01') # TESTING VALUE, scrapes only two months.
 
     while parser.finished == False:
         year = workingDay.year
@@ -71,21 +83,22 @@ if __name__ == '__main__':
         #URL where month and year roll back as the loop continues
         url = f"http://climate.weather.gc.ca/climate_data/daily_data_e.html?StationID=27174&timeframe=2&StartYear=1840&EndYear=2018&Day=1&Year={year}&Month={month}#"
 
-        #reset weather data for the new month
-        parser.weatherData = {}
-
         with urllib.request.urlopen(url) as response:
             html = response.read().decode('utf-8')
 
         parser.date = workingDay
         parser.feed(html)
+        daystring = parser.date.isoformat()
+
 
         #Print weather data for the month if available
-        if parser.weatherData:
+        try:
+            parser.weatherData[daystring]
+            # Just for debugging. It'll print compoundingly more data, but it's hard to get just the keys for the month.
             for day, data in parser.weatherData.items():
-                print(f"weather({day.strftime('%m-%d-%Y')}): {data}")
+                print(f"weather({day}): {data}")
 
-        else:
+        except KeyError:
             #Break the loop if there is no data found for the month
             print(f"No data available for {workingDay.strftime('%B %Y')}. Ending loop.")
             break
