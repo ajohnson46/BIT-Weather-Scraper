@@ -1,6 +1,7 @@
 from html.parser import HTMLParser
 import urllib.request
 from datetime import date, timedelta
+from db_operations import DBOperations
 
 class GCWeatherParser(HTMLParser):
     """Stuff
@@ -74,7 +75,7 @@ class GCWeatherParser(HTMLParser):
 if __name__ == '__main__':
     parser = GCWeatherParser()
     workingDay = date.today()
-    # workingDay = date.fromisoformat('1997-03-01') # TESTING VALUE, scrapes only two months.
+    workingDay = date.fromisoformat('1997-03-01') # TESTING VALUE, scrapes only two months.
 
     while parser.finished == False:
         year = workingDay.year
@@ -95,8 +96,8 @@ if __name__ == '__main__':
         try:
             parser.weatherData[daystring]
             # Just for debugging. It'll print compoundingly more data, but it's hard to get just the keys for the month.
-            for day, data in parser.weatherData.items():
-                print(f"weather({day}): {data}")
+            # for day, data in parser.weatherData.items():
+                # print(f"{day}: {data}")
 
         except KeyError:
             #Break the loop if there is no data found for the month
@@ -105,3 +106,18 @@ if __name__ == '__main__':
 
         #move to the previous month
         workingDay = workingDay.replace(day=1) - timedelta(days=1)
+
+    # Saving the data
+    db = DBOperations()
+    #(data["sample_date"], data["location"], data["min_temp"], data["max_temp"], data["avg_temp"])
+    for day, data in parser.weatherData.items():
+        # Data = {min, max, mean}
+        db_data = {}
+        db_data ["sample_date"] = day
+        db_data ["location"] = "Winnipeg"
+        db_data ["min_temp"] = data ["min"]
+        db_data ["max_temp"] = data ["max"]
+        db_data ["avg_temp"] = data ["mean"]
+
+        db.save_data(db_data)   
+        
