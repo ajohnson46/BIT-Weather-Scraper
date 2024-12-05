@@ -29,6 +29,8 @@ class PlotOperations:
             print (data)
             print (data[1][5:7])
 
+        # if not data???
+
         print (monthly_data)
 
         monthly_data = dict(sorted(monthly_data.items()))
