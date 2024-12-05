@@ -3,58 +3,52 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class PlotOperations:
+    """Pulls data from the weather database and displays a box plot for all the data and a line plot for the month selected.
+    """
+    def __init__(self, year=None):
+        # Handle what happens when you don't choose a year
+        self.year = year
+
     def test (self):
         db = DBOperations()
-        weather_data = db.fetch_data()
-        spread = []
-        center = []
-        flier_high = []
-        flier_low = []
+        weather_data = db.fetch_data() # Need a way to fetch only a single year
         monthly_data = {}
 
+        # For all data this year, split into months and store each set of monthly data 
+        # WARNING: This needs the data to only be for one year.
         for data in weather_data:
             month = data[1][5:7]
-            if month not in monthly_data.keys():
-                # count of days. sum of avgs, max for the month, and the min for month, list of raw averages
-                monthly_data[month] = [1,data[5],data[3],data[4],[]]
+            year = int(data[1][0:4])
+            # If this is not for the chosen year, skip
+            if self.year != year:
                 continue
-            monthly_data[month][0] += 1
-            monthly_data[month][1] += data[5]
-            if monthly_data[month][2] < data[3]:
-                monthly_data[month][2] = data[3]
-            if monthly_data[month][3] > data[4]:
-                monthly_data[month][3] = data[4]
-            monthly_data[month][4].append(data[5]) 
-
-            print (data)
-            print (data[1][5:7])
+            # Set up array so we can append into it
+            if month not in monthly_data.keys():
+                monthly_data[month] = []
+            monthly_data[month].append(data[5]) 
 
         # if not data???
 
-        print (monthly_data)
-
+        # Sort by month
         monthly_data = dict(sorted(monthly_data.items()))
 
+        # Array of each month of data, for boxplot.
+        # Can pull out one month for line chart.
         data = []
-
-        # count of days. sum of avgs, max for the month, and the min for month
         for key,item in monthly_data.items():
-            data.append(item[4])
-            # spread.append(item[2])
-            # spread.append(item[3])
-            # center.append(item[1]/item[0])
-            # flier_high.append(item[2])
-            # flier_low.append(item[3])
+            data.append(item)
         
-        # plot_data = np.concatenate((spread, center, flier_high, flier_low), 0)
         plt.boxplot(data)
         plt.show()
         plt.plot(data[0])
         plt.show()
 
-        # d = np.random.normal(5,10,15)
-        # print(d)
 
+# Just for testing.
 if __name__ == '__main__':
-    plotter = PlotOperations()
+    year = "2024"
+    # can change it to int or can handle strings elsewhere...
+    year = int(year)
+    plotter = PlotOperations(year)
+    
     plotter.test()

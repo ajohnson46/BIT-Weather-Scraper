@@ -75,7 +75,7 @@ class GCWeatherParser(HTMLParser):
 if __name__ == '__main__':
     parser = GCWeatherParser()
     workingDay = date.today()
-    workingDay = date.fromisoformat('1997-03-01') # TESTING VALUE, scrapes only two months.
+    # workingDay = date.fromisoformat('1997-03-01') # TESTING VALUE, scrapes only two months.
 
     while parser.finished == False:
         year = workingDay.year
@@ -86,6 +86,8 @@ if __name__ == '__main__':
 
         with urllib.request.urlopen(url) as response:
             html = response.read().decode('utf-8')
+            # Prints a line of stars as it scrapes, to show progress
+            print("*", end=" ")
 
         parser.date = workingDay
         parser.feed(html)
