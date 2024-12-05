@@ -74,9 +74,11 @@ class DBOperations:
                  max_temp = excluded.max_temp,
                  avg_temp = excluded.avg_temp"""
                 c.execute(sql, (data["sample_date"], data["location"], data["min_temp"], data["max_temp"], data["avg_temp"]))
-                print("Data saved or updated successfully.")
+                # Expected result. No need for message.
+                # print("Data saved or updated successfully.")
+                # NOTE: Could use logging.debug to show these only if we set it to debug mode.
         except Exception as e:
-            print("Error saving/updating data.", e)
+            print(f"When saving {data["sample_date"]}: {e}")
 
     def purge_data(self):
         """ purge all the data from the DB for when program fetches all new weather data 
