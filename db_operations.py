@@ -21,9 +21,9 @@ class DBOperations:
                             (id integer primary key autoincrement not null,
                             sample_date text not null,
                             location text not null,
-                            min_temp real not null,
-                            max_temp real not null,
-                            avg_temp real not null,
+                            min_temp real,
+                            max_temp real,
+                            avg_temp real,
                             UNIQUE(sample_date, location)
                       );""")
             print("DB initialized and table created")
