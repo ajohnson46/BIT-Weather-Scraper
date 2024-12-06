@@ -32,8 +32,8 @@ class GCWeatherParser(HTMLParser):
             self.column_counter = 0
 
         # td, while in row, would be Max, then Min, then Mean, and then others. Need to count.
-        if tag == "td":
-            self.column_counter += 1 
+        if tag == "td" and self.in_row:
+            self.column_counter += 1
 
     def handle_endtag(self, tag):
         if tag == "tr":
@@ -46,7 +46,7 @@ class GCWeatherParser(HTMLParser):
          # if it's not numeric, just return... (this is probably not the best way to do it)
         try:
             data = float(data)
-        except:
+        except ValueError:
             if data and self.in_th:
                 self.in_row = False # If row does not start with a number, this is not a row of data
             return
@@ -56,6 +56,7 @@ class GCWeatherParser(HTMLParser):
         # "...if we are in..." = There's a condition that is set up. We're looking for a boolean concept.
         if self.in_row:
             daystring = self.date.isoformat()
+            print(f"Handling data: {data}, Current Date: {self.date}, Column: {self.column_counter}")
             if self.in_th: # This is specifically the beginning of the row.
                 self.date=self.date.replace(day = int(data))
                 daystring = self.date.isoformat()
@@ -84,10 +85,14 @@ if __name__ == '__main__':
         #URL where month and year roll back as the loop continues
         url = f"http://climate.weather.gc.ca/climate_data/daily_data_e.html?StationID=27174&timeframe=2&StartYear=1840&EndYear=2018&Day=1&Year={year}&Month={month}#"
 
-        with urllib.request.urlopen(url) as response:
-            html = response.read().decode('utf-8')
-            # Prints a line of stars as it scrapes, to show progress
-            print("*", end=" ")
+        # Scrape the page
+        try:
+            with urllib.request.urlopen(url) as response:
+                html = response.read().decode('utf-8')
+            print(f"Scraping URL: {url}")
+        except Exception as e:
+            print(f"Error fetching URL {url}: {e}")
+            break
 
         parser.date = workingDay
         parser.feed(html)
@@ -96,14 +101,13 @@ if __name__ == '__main__':
 
         #Print weather data for the month if available
         try:
-            parser.weatherData[daystring]
-            # Just for debugging. It'll print compoundingly more data, but it's hard to get just the keys for the month.
-            # for day, data in parser.weatherData.items():
-                # print(f"{day}: {data}")
-
+            if daystring in parser.weatherData:
+                print(f"Data for {workingDay.strftime('%B %Y')}: {parser.weatherData[daystring]}")
+            else:
+                print(f"No data available for {workingDay.strftime('%B %Y')}. Ending loop.")
+                break
         except KeyError:
-            #Break the loop if there is no data found for the month
-            print(f"No data available for {workingDay.strftime('%B %Y')}. Ending loop.")
+            print(f"No data found for {workingDay.strftime('%B %Y')}")
             break
 
         #move to the previous month
@@ -112,14 +116,19 @@ if __name__ == '__main__':
     # Saving the data
     db = DBOperations()
     #(data["sample_date"], data["location"], data["min_temp"], data["max_temp"], data["avg_temp"])
-    for day, data in parser.weatherData.items():
-        # Data = {min, max, mean}
-        db_data = {}
-        db_data ["sample_date"] = day
-        db_data ["location"] = "Winnipeg"
-        db_data ["min_temp"] = data ["min"]
-        db_data ["max_temp"] = data ["max"]
-        db_data ["avg_temp"] = data ["mean"]
-
-        db.save_data(db_data)   
+    if parser.weatherData:
+                    #print("Fetched data:", parser.weatherData)
+        for day, data in parser.weatherData.items():
+            if "min" in data and "max" in data and "mean" in data:
+                print(f"Saving data: {data}")
+                db_data = {
+                    "sample_date": day,
+                    "location": "Winnipeg",
+                    "min_temp": data["min"],
+                    "max_temp": data["max"],
+                    "avg_temp": data["mean"],
+                }
+                db.save_data(db_data)
+            else:
+                print(f"Missing data for {day}, not saving.")
         
