@@ -1,20 +1,39 @@
-from db_operations import DBOperations
 import matplotlib.pyplot as plt
-import numpy as np
 
 class PlotOperations:
-    """Pulls data from the weather database and displays a box plot for all the data and a line plot for the month selected.
+    """
+    A class for visualizing weather data with box plots and line plots.
+
+    Attributes:
+        db (DBoperations): An instance of the database operations class for retrieving weather data.
     """
     def __init__(self, db):
+        """
+        Initializes the PlotOperations class with a database instance.
+
+        Args:
+            db (DBOperations): An instance of DBOperations for fetching weather data.
+        """
         # Handle what happens when you don't choose a year
         self.db = db
 
     def generate_box_plot(self, year_from, year_to, output_file=None):
+        """
+        Generates a box plot for temperature data within a specified year range.
+
+        Args:
+            year_from (int): The starting year of the range.
+            year_to (int): The ending year of the range.
+            output_file (str, optional): File path to save the plot. If not specified, plot displays.
+
+        Raises:
+            ValueError: If no data or no temperature data is available for the specified range.
+        """
         #db = DBOperations()
-       # weather_data = db.fetch_data(year=self.year) 
+       # weather_data = db.fetch_data(year=self.year)
        # monthly_data = {}
 
-        # For all data this year, split into months and store each set of monthly data 
+        # For all data this year, split into months and store each set of monthly data
         # WARNING: This needs the data to only be for one year.
        # for data in weather_data:
         #    month = data[1][5:7]
@@ -25,7 +44,7 @@ class PlotOperations:
             # Set up array so we can append into it
           #  if month not in monthly_data:
            #     monthly_data[month] = []
-          #  monthly_data[month].append(data[5]) 
+          #  monthly_data[month].append(data[5])
 
         # if not data???
 
@@ -62,14 +81,24 @@ class PlotOperations:
         plt.title(f"Box Plot of Temperatures ({year_from} to {year_to})")
         #plt.xlabel("Years")
         plt.ylabel("Temperature (°C)")
-        
+
         if output_file:
             plt.savefig(output_file)
         else:
             plt.show()
 
     def generate_line_plot(self, year, month, output_file=None):
-        """Generate a line plot for a specific month in the specified year."""   
+        """
+        Generates a line plot for daily temperatures in a specific month of a given year.
+
+        Args:
+            year (int): The year for which data is visualized.
+            month (int): The month (1-12) for which data is visualized.
+            output_file (str, optional): File path to save the plot. If not specified, plot displays.
+
+        Raises:
+            ValueError: If no data or no temperature data available for the specified month and year.
+        """
         #db = DBOperations()
         #weather_data = db.fetch_data(year=self.year)
 
@@ -78,7 +107,7 @@ class PlotOperations:
         #for data in weather_data:
         #    if data[1][5:7] == month:
           #      daily_data.append(data[5])  # Append avg_temp
-        
+
         #if not daily_data:
         #    print(f"No data available for {self.year}-{month}.")
          #   return

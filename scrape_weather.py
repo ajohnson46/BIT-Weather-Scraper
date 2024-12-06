@@ -4,25 +4,41 @@ from datetime import date, timedelta
 from db_operations import DBOperations
 
 class GCWeatherParser(HTMLParser):
-    """Stuff
-
+    """
+    Parses HTML weather data from Environment Canada's website, extracting daily 
+    weather statistics (max, min, and mean temperatures) for a given month.
     """
     def __init__(self):
-        """Info about how it's made
+        """
+        Initializes the parser with attributes to track state and store weather data.
         """
         super().__init__()
         self.weatherData = {}
-        """A dictionary of dictionaries. Date ->  Min:int, Max:int, Mean:int """
+        """A dictionary of dictionaries storing weather data.
+        Keys: ISO-formatted date strings.
+        Values: Dictionaries with keys 'max', 'min', and 'mean' for temperature data.
+        """
         self.date = date.today() # Could be passed in somehow, like when parsing.
+        """Current date being processed. Can be updated dynamically."""
         self.finished = False
-        """ """
+        """Flag to indicate when parsing is complete."""
 
         # Could be private:
         self.in_row = False
+        """Tracks if the parser is inside a valid data row."""
         self.in_th = False
+        """Tracks if the parser is inside a <th> element with row scope."""
         self.column_counter = 0
+        """Tracks the column number for parsing specific temperature data."""
 
     def handle_starttag(self, tag, attrs):
+        """
+        Handles start tags in the HTML. Identifies <th> and <td> elements relevant to weather data.
+
+        Args:
+            tag (str): The name of the tag.
+            attrs (list of tuples): Attributes of the tag.
+        """
         # th[scope=row] has the day. After, the data will be weather info. Non-numeric can be ignored.
         if tag == "th" and ('scope','row') in attrs:
             # We know that a TH is starting.
@@ -36,12 +52,24 @@ class GCWeatherParser(HTMLParser):
             self.column_counter += 1
 
     def handle_endtag(self, tag):
+        """
+        Handles end tags in the HTML, resetting state variables for rows and headers.
+
+        Args:
+            tag (str): The name of the tag.
+        """
         if tag == "tr":
             self.in_row = False
         if tag == "th":
             self.in_th = False
 
     def handle_data(self, data):
+        """
+        Processes the text content within tags, extracting relevant weather data.
+
+        Args:
+            data (str): The text content inside an HTML element.
+        """
         data = data.strip()
          # if it's not numeric, just return... (this is probably not the best way to do it)
         try:
@@ -74,6 +102,9 @@ class GCWeatherParser(HTMLParser):
                 pass
 
 if __name__ == '__main__':
+    """
+    Main script to scrape weather data, parse it, and save it to a database.
+    """
     parser = GCWeatherParser()
     workingDay = date.today()
     # workingDay = date.fromisoformat('1997-03-01') # TESTING VALUE, scrapes only two months.
