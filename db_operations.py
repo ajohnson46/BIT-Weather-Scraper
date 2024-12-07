@@ -1,15 +1,13 @@
 """
-Description: Demonstrates DB operations, creates, inserts, deletes, & fetches
-Date: Nov.23/2024
+Description: Handles all DB operations
+Date: Nov.24/2024
 """
 from dbcm import DBCM
-
 class DBOperations:
-
+    """Demonstrates DB operations, creates, deletes, saves, & fetches data"""
     def __init__(self, db_name="weather.sqlite"):
         """Initialize the database connection."""
         self.db_name = db_name
-        #should be called anytime program is ran
         self.initialize_db()
     
     def initialize_db(self):
@@ -35,8 +33,8 @@ class DBOperations:
         try:
             with DBCM(self.db_name) as c:
                 if year:
-                   sql = "SELECT * FROM weather WHERE sample_date LIKE ?"
-                   c.execute(sql, (f"{year}%",))
+                    sql = "SELECT * FROM weather WHERE sample_date LIKE ?"
+                    c.execute(sql, (f"{year}%",))
                 else:
                     sql = "SELECT * FROM weather"
                     c.execute(sql)
@@ -44,11 +42,11 @@ class DBOperations:
                 print("Fetched data:", results)  # Debug output
                 return results
         except Exception as e:
-             print("Error fetching data:", e)
-             return []
+            print("Error fetching data:", e)
+            return []
         
     def save_data(self, data):
-        """ saves new data to the DB only if it doesn't already exist
+        """Saves new data to the DB only if it doesn't already exist
          if the record does exist, it will be updated """
         try:
             with DBCM(self.db_name) as c:
@@ -59,13 +57,15 @@ class DBOperations:
                  min_temp = excluded.min_temp,
                  max_temp = excluded.max_temp,
                  avg_temp = excluded.avg_temp"""
-                c.execute(sql, (data["sample_date"], data["location"], data["min_temp"], data["max_temp"], data["avg_temp"]))
+                c.execute(sql, (data["sample_date"], data["location"], 
+                                data["min_temp"], data["max_temp"], data["avg_temp"]))
                 
         except Exception as e:
             print(f"When saving {data['sample_date']}: {e}")
 
     def purge_data(self):
-        """ purge all the data from the DB for when program fetches all new weather data 
+        """Purge all the data from the DB for when 
+        program fetches all new weather data 
         (doesn't delete the DB just the data) """
         try:
             #deletes all rows in the weather table, but not the actual DB
@@ -75,7 +75,6 @@ class DBOperations:
                 print("Data deleted successfully.")
         except Exception as e:
             print("Error purging data.", e)
-
 
 if __name__ == "__main__":
     db_ops = DBOperations()
