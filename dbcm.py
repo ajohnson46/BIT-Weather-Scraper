@@ -5,7 +5,7 @@ Date: Nov.24/2024
 import sqlite3
 
 class DBCM:
-
+    """Context manager to manage DB connections"""
     def __init__(self, db_name="weather.sqlite"):
         """Initialize the database connection."""
         self.db_name = db_name
