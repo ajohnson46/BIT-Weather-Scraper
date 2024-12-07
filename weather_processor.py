@@ -36,7 +36,6 @@ class WeatherProcessor():
         try:
             print("Starting the data download process...")
             # Purge the existing database
-            #self.db.purge_data()
 
             #Use the GCWeatherParser to fetch and save data
             parser = GCWeatherParser()
@@ -50,7 +49,17 @@ class WeatherProcessor():
             # Save the fetched data to the database
             for data in existing_data:
                 print(f"Saving data: {data}")
-                self.db.save_data(data)
+                print(f"Processing data tuple: {data}")
+                # Assuming data is a tuple like (sample_date, location, min_temp, max_temp, avg_temp)
+                db_data = {
+                    "id": data[0],
+                    "sample_date": data[1],
+                    "location": data[2],
+                    "min_temp": data[3],
+                    "max_temp": data[4],
+                    "avg_temp": data[5],
+                }
+                self.db.save_data(db_data)
 
 
             self.show_message("Download Complete", "Full weather data downloaded successfully.")
@@ -60,15 +69,38 @@ class WeatherProcessor():
 
     def update_weather_data(self):
         try:
+            print("Starting weather data update process...")
             #  Get the latest date in the database
+
             records = self.db.fetch_data()
             if not records:
                 self.show_message("No Data Found", "No existing data found. Please download the full dataset first.")
                 return
-
+            
+                    # Validate and find the latest valid date
+            latest_date_str = None
+            for record in records:
+                try:
+                    # Attempt to parse the date field
+                    date_candidate = record[1]
+                    print(f"Checking date: {date_candidate}")
+                    _ = date.fromisoformat(date_candidate)  # Validates the format
+                    latest_date_str = date_candidate if not latest_date_str else max(latest_date_str, date_candidate)
+                except ValueError as e:
+                    print(f"Invalid date format in record: {record} - {e}")
+            
             # Calculate the date range to scrape
             latest_date_str = max(record[1] for record in records)
+            print(f"Latest date in database: {latest_date_str}")
+
+            if not latest_date_str:
+                print("No valid dates found in the database.")
+                self.show_message("Error", "No valid dates found in the database.")
+                return
+
+            print(f"Latest valid date in database: {latest_date_str}")
             latest_date = date.fromisoformat(latest_date_str)
+
             today = date.today()
             if latest_date >= today:
                 self.show_message("Update Not Needed", "The database is already up-to-date.")
